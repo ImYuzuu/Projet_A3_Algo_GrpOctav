@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 # Read data from file
 data = []
-with open('r101.txt') as datafile:
+with open('ProgramV2\c101.txt') as datafile:
     for line in datafile:
         line = line.strip().split('\n')
         data.append(line)
