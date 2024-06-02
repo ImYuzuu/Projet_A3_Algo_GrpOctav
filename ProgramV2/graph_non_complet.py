@@ -27,12 +27,12 @@ nb_villes = len(split_data)
 nb_fourmis = 10
 
 # Number of iterations
-ITERATIONS = 200
+ITERATIONS = 1000
 
 # Parameters for ant colony optimization algorithm
-alpha = 2
+alpha = 1
 beta = 4
-rho = 2
+rho = 0.64
 Q = 4
 
 # Maximum capacity for the truck
@@ -64,14 +64,17 @@ colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'pink']
 
 # Ant Colony Optimization Algorithm
 def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, iterations, alpha, beta, rho, Q, depot_index):
-    pheromone_matrix = np.ones(distance_matrix.shape) / (distance_matrix.shape[0] * 0.1)  # Initialize pheromone matrix
+    # Initialize pheromone matrix
+    pheromone_matrix = np.ones(distance_matrix.shape) / \
+        (distance_matrix.shape[0] * 0.1)
 
     shortest_path_length = float('inf')
     shortest_path = []
     shortest_path_segments = []
 
     nb_villes = len(distance_matrix)
-    colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple']  # Define colors for visualization
+    colors = ['red', 'blue', 'green', 'yellow', 'orange',
+              'purple']  # Define colors for visualization
 
     for iteration in tqdm(range(iterations)):
         paths = []
@@ -95,15 +98,16 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                 for city in unvisited_cities:
                     if current_capacity + demand_list[city] <= capacity:
                         probabilities[city] = (pheromone_matrix[current_city, city] ** alpha) * \
-                                              ((1 / distance_matrix[current_city, city]) ** beta)
+                                              ((1 /
+                                               distance_matrix[current_city, city]) ** beta)
 
                 if np.sum(probabilities) == 0:
                     break  # All reachable cities have been visited or cannot be visited due to capacity
 
                 probabilities /= np.sum(probabilities)
-                
 
-                next_city = np.random.choice(np.arange(nb_villes), p=probabilities)
+                next_city = np.random.choice(
+                    np.arange(nb_villes), p=probabilities)
 
                 path.append(next_city)
                 segment.append(next_city)
@@ -113,9 +117,11 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                 current_city = next_city
 
                 if current_capacity >= capacity:
-                    path.append(depot_index)  # Return to the depot due to capacity constraints
+                    # Return to the depot due to capacity constraints
+                    path.append(depot_index)
                     segment.append(depot_index)
-                    path_segments.append((segment, colors[segment_color % len(colors)]))
+                    path_segments.append(
+                        (segment, colors[segment_color % len(colors)]))
                     segment = [depot_index]
                     current_capacity = 0
                     current_city = depot_index
@@ -124,10 +130,12 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
             if current_city != depot_index:
                 path.append(depot_index)  # Return to the depot at the end
                 segment.append(depot_index)
-                path_segments.append((segment, colors[segment_color % len(colors)]))
+                path_segments.append(
+                    (segment, colors[segment_color % len(colors)]))
 
             paths.append(path)
-            path_length = sum(distance_matrix[path[i], path[i + 1]] for i in range(len(path) - 1))
+            path_length = sum(
+                distance_matrix[path[i], path[i + 1]] for i in range(len(path) - 1))
             path_lengths.append(path_length)
 
             if path_length < shortest_path_length:
@@ -143,12 +151,15 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
         pheromone_matrix *= (1 - rho)
 
         if iteration % 10 == 0:
-            print(f"Iteration {iteration}: Shortest Path Length = {shortest_path_length}")
+            print(f"Iteration {iteration}: Shortest Path Length = {
+                  shortest_path_length}")
 
     return shortest_path, shortest_path_length, shortest_path_segments
 
+
 # Run Ant Colony Optimization Algorithm
-shortest_path, shortest_path_length, shortest_path_segments = ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, ITERATIONS, alpha, beta, rho, Q, depot_index)
+shortest_path, shortest_path_length, shortest_path_segments = ant_colony_optimization(
+    distance_matrix, demand_list, capacity, nb_fourmis, ITERATIONS, alpha, beta, rho, Q, depot_index)
 
 print("Shortest Path:", shortest_path)
 print("Shortest Path Length:", shortest_path_length)
@@ -178,8 +189,10 @@ edges = G.edges(data=True)
 edge_colors = [e[2]['color'] for e in edges]
 edge_weights = [e[2]['weight'] for e in edges]
 
-nx.draw(G, pos, with_labels=True, node_size=300, node_color='skyblue', font_size=8, font_color='black', font_weight='bold')
-nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color=edge_colors, width=edge_weights, alpha=0.7, connectionstyle='arc3,rad=0.2')
+nx.draw(G, pos, with_labels=True, node_size=300, node_color='skyblue',
+        font_size=8, font_color='black', font_weight='bold')
+nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color=edge_colors,
+                       width=edge_weights, alpha=0.7, connectionstyle='arc3,rad=0.2')
 
 # Show the plot
 plt.title('Shortest Path Found by Ant Colony Optimization')
