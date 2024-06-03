@@ -3,6 +3,7 @@ import networkx as nx
 import math
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+from sklearn.cluster import KMeans
 
 # Read data from file
 data = []
@@ -24,16 +25,16 @@ split_data = [line[0].split() for line in numpy_data]
 nb_villes = len(split_data)
 
 # Number of ants
-nb_fourmis = 10
+nb_fourmis = 1
 
 # Number of iterations
-ITERATIONS = 1000
+ITERATIONS = 50
 
 # Parameters for ant colony optimization algorithm
-alpha = 1
+alpha = 10
 beta = 4
 rho = 0.64
-Q = 4
+Q = 1
 
 # Maximum capacity for the truck
 capacity = 200
@@ -63,7 +64,7 @@ colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'pink']
 
 
 # Ant Colony Optimization Algorithm
-def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, iterations, alpha, beta, rho, Q, depot_index):
+def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, iterations, alpha, beta, rho, Q, depot_index, penalty):
     # Initialize pheromone matrix
     pheromone_matrix = np.ones(distance_matrix.shape) / \
         (distance_matrix.shape[0] * 0.1)
@@ -92,17 +93,28 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
             unvisited_cities.remove(current_city)
             segment = [current_city]  # Track the current segment
             segment_color = 0  # Start with the first color
-
             while unvisited_cities:
                 probabilities = np.zeros(nb_villes)
                 for city in unvisited_cities:
                     if current_capacity + demand_list[city] <= capacity:
                         probabilities[city] = (pheromone_matrix[current_city, city] ** alpha) * \
-                                              ((1 /
-                                               distance_matrix[current_city, city]) ** beta)
+                                            ((1 /
+                                              distance_matrix[current_city, city]) ** beta)
 
                 if np.sum(probabilities) == 0:
-                    break  # All reachable cities have been visited or cannot be visited due to capacity
+                    # If no feasible next city due to capacity constraints, return to the depot
+                    path.append(depot_index)
+                    segment.append(depot_index)
+                    path_segments.append(
+                        (segment, colors[segment_color % len(colors)]))
+                    segment = [depot_index]
+                    current_capacity = 0
+                    current_city = depot_index
+                    segment_color += 1
+                    continue  # Skip to the next iteration without updating current_city
+
+                # Penalize revisiting already visited cities
+                probabilities *= np.where(visited, penalty, 1000)
 
                 probabilities /= np.sum(probabilities)
 
@@ -115,7 +127,6 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                 unvisited_cities.remove(next_city)
                 current_capacity += demand_list[next_city]
                 current_city = next_city
-
                 if current_capacity >= capacity:
                     # Return to the depot due to capacity constraints
                     path.append(depot_index)
@@ -151,15 +162,15 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
         pheromone_matrix *= (1 - rho)
 
         if iteration % 10 == 0:
-            print(f"Iteration {iteration}: Shortest Path Length = {
-                  shortest_path_length}")
+            print(f'Iteration {iteration}: Shortest Path Length = {shortest_path_length}')
 
     return shortest_path, shortest_path_length, shortest_path_segments
 
 
 # Run Ant Colony Optimization Algorithm
+penalty = 0.1  # Penalty for revisiting already visited cities
 shortest_path, shortest_path_length, shortest_path_segments = ant_colony_optimization(
-    distance_matrix, demand_list, capacity, nb_fourmis, ITERATIONS, alpha, beta, rho, Q, depot_index)
+    distance_matrix, demand_list, capacity, nb_fourmis, ITERATIONS, alpha, beta, rho, Q, depot_index, penalty)
 
 print("Shortest Path:", shortest_path)
 print("Shortest Path Length:", shortest_path_length)
