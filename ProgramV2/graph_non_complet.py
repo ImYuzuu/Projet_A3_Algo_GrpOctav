@@ -3,7 +3,6 @@ import networkx as nx
 import math
 from matplotlib import pyplot as plt
 from tqdm import tqdm
-from sklearn.cluster import KMeans
 
 # Read data from file
 data = []
@@ -28,11 +27,11 @@ nb_villes = len(split_data)
 nb_fourmis = 1
 
 # Number of iterations
-ITERATIONS = 50
+ITERATIONS = 500
 
 # Parameters for ant colony optimization algorithm
-alpha = 10
-beta = 4
+alpha = 3
+beta = 1
 rho = 0.64
 Q = 1
 
@@ -98,8 +97,8 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                 for city in unvisited_cities:
                     if current_capacity + demand_list[city] <= capacity:
                         probabilities[city] = (pheromone_matrix[current_city, city] ** alpha) * \
-                                            ((1 /
-                                              distance_matrix[current_city, city]) ** beta)
+                            ((1 /
+                              distance_matrix[current_city, city]) ** beta)
 
                 if np.sum(probabilities) == 0:
                     # If no feasible next city due to capacity constraints, return to the depot
@@ -162,7 +161,8 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
         pheromone_matrix *= (1 - rho)
 
         if iteration % 10 == 0:
-            print(f'Iteration {iteration}: Shortest Path Length = {shortest_path_length}')
+            print(f'Iteration {iteration}: Shortest Path Length = {
+                  shortest_path_length}')
 
     return shortest_path, shortest_path_length, shortest_path_segments
 
