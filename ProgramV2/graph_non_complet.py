@@ -76,7 +76,7 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
     colors = ['red', 'blue', 'green', 'yellow', 'orange',
               'purple']  # Define colors for visualization
 
-    for iteration in tqdm(range(iterations)):
+    for iteration in range(iterations):
         paths = []
         path_lengths = []
         path_segments = []
@@ -113,7 +113,6 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                     continue  # Skip to the next iteration without updating current_city
 
                 # Penalize revisiting already visited cities
-
                 probabilities /= np.sum(probabilities)
 
                 next_city = np.random.choice(
@@ -152,22 +151,25 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                 shortest_path = path
                 shortest_path_segments = path_segments
 
-            # Update pheromone only on visited edges (local pheromone update)
+            # Local pheromone update
             for i in range(len(path) - 1):
                 pheromone_matrix[path[i], path[i + 1]] += Q / path_length
+                # Introduce decay factor
+                pheromone_matrix[path[i], path[i + 1]] *= (1 - rho)
 
         # Global pheromone update (pheromone evaporation)
         pheromone_matrix *= (1 - rho)
 
-        if iteration % 10 == 0:
-            print(f'Iteration {iteration}: Shortest Path Length = {
-                  shortest_path_length}')
+        # Check for convergence or maximum iterations
+        if iteration > 0 and abs(path_length - shortest_path_length) < 1e-6:
+            print("Converged at iteration", iteration)
+            break
 
     return shortest_path, shortest_path_length, shortest_path_segments
 
 
 # Run Ant Colony Optimization Algorithm
-penalty = 0.1  # Penalty for revisiting already visited cities
+penalty = 0.8  # Penalty for revisiting already visited cities
 shortest_path, shortest_path_length, shortest_path_segments = ant_colony_optimization(
     distance_matrix, demand_list, capacity, nb_fourmis, ITERATIONS, alpha, beta, rho, Q, depot_index, penalty)
 
