@@ -27,11 +27,11 @@ nb_villes = len(split_data)
 nb_fourmis = 1
 
 # Number of iterations
-ITERATIONS = 500
+ITERATIONS = 1000
 
 # Parameters for ant colony optimization algorithm
-alpha = 3
-beta = 1
+alpha = 10
+beta = 6
 rho = 0.64
 Q = 1
 
@@ -113,7 +113,6 @@ def ant_colony_optimization(distance_matrix, demand_list, capacity, nb_fourmis, 
                     continue  # Skip to the next iteration without updating current_city
 
                 # Penalize revisiting already visited cities
-                probabilities *= np.where(visited, penalty, 1000)
 
                 probabilities /= np.sum(probabilities)
 
